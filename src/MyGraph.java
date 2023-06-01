@@ -1,66 +1,68 @@
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.*;
 
-public class MyGraph {
-    //    undirected graph
-    private int numOfVertices;
-    private LinkedList<Integer>[] adjList;
+public class MyGraph<V> {
+    private Map<Vertex, List<Edge<V>>> graph;
 
-    public MyGraph(int numOV) {
-        this.numOfVertices = numOV;
-        this.adjList = new LinkedList[numOV];
-        for(int i = 0; i < numOV; i++) {
-            this.adjList[i] = new LinkedList<>();
+    public MyGraph() {
+        graph = new HashMap<>();
+    }
+
+    public void addEdge(Vertex source, Vertex destination, double weight){
+        Edge edge = new Edge(source, destination, weight);
+        source.addAdjVertex(destination, weight);
+        if (!graph.containsKey(source)) graph.put(source, new ArrayList<>());
+        graph.get(source).add(edge);
+    }
+
+    public Map<Vertex, Double> dijkstra(Vertex start) {
+
+        Map<Vertex, Double> distances = new HashMap<>();
+        for (Vertex node : graph.keySet()) {
+            distances.put(node, Double.MAX_VALUE);
         }
-    }
-    public void addEdge(int source, int destination) {
-        validateVertex(source);
-        validateVertex(destination);
-        adjList[source].add(destination);
-        adjList[destination].add(source);
-    }
-    public void removeEdge(int source, int destination) {
-        validateVertex(source);
-        validateVertex(destination);
-        adjList[source].remove(destination);
-        adjList[destination].remove(source);
-    }
-    public boolean hasEdge(int source, int destination){
-        validateVertex(source);
-        validateVertex(destination);
-        return adjList[source].contains(destination);
-    }
-    public LinkedList<Integer> getNeighbor(int vertex) {
-        validateVertex(vertex);
-        return adjList[vertex];
-    }
-    public void printGraph() {
-        for (int i = 0; i < numOfVertices; i++) {
-            System.out.print("Vertex " + i + " connected to: ");
-            for (int neighbor: adjList[i]) {
-                System.out.print(neighbor + " ");
-            }
-            System.out.println();
-        }
-    }
-    public void DFS(int startVertex) {
-        validateVertex(startVertex);
-        boolean[] visited = new boolean[numOfVertices];
-        DFSHelper(startVertex, visited);
-    }
-    private void DFSHelper(int vertex, boolean[] visited) {
-        visited[vertex] = true;
-        System.out.print(vertex + " ");
-        for(int neighbor: adjList[vertex]) {
-            if (!visited[neighbor]) {
-                DFSHelper(neighbor, visited);
+        distances.put(start, 0d);
+
+        PriorityQueue<Vertex> queue = new PriorityQueue<>(Comparator.comparingDouble(distances::get));
+        queue.add(start);
+
+
+        while (!queue.isEmpty()) {
+            Vertex currentVertex = queue.poll();
+
+            for (Edge neighbor : graph.get(currentVertex)) {
+
+                double distance = distances.get(currentVertex) + neighbor.getWeight();
+
+
+                if (distance < distances.get(currentVertex)) {
+                    distances.put(currentVertex, distance);
+
+                    queue.add((Vertex) neighbor.getDest());
+                }
             }
         }
 
+        return distances;
     }
-    private void validateVertex(int index){
-        if (index < 0 || index > numOfVertices) {
-            throw new IllegalArgumentException("Vertex " + index + " is out of range!");
+
+    public void BFS(Vertex start){
+        Set<Vertex> visited = new HashSet<>();
+        Queue<Vertex> queue = new LinkedList<>();
+
+        visited.add(start);
+        queue.add(start);
+
+        while (!queue.isEmpty()) {
+            Vertex currentVertex = queue.poll();
+            System.out.print(currentVertex + " ");
+            Set<Vertex<V>> neighbors = currentVertex.getAdjVertices().keySet();
+            for (Vertex<V> neighbor : neighbors) {
+                if (!visited.contains(neighbor)) {
+                    visited.add(neighbor);
+                    queue.add(neighbor);
+                }
+            }
         }
     }
+
 }
